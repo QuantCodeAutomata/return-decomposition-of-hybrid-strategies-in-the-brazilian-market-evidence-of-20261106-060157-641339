@@ -76,31 +76,43 @@ against NEFIN/FEA-USP monthly risk factors.
 
 | Model | alpha (%/month) | alpha p-value | beta Rm-Rf | beta SMB | beta HML | beta WML |
 |---|---|---|---|---|---|---|
-| CAPM | 3.766 | 0.222 | 1.211 (p=0.114) | — | — | — |
-| Fama-French 3-Factor | 4.480 | 0.222 | 1.885 (p=0.165) | -0.828 (p=0.325) | -1.623 (p=0.270) | — |
-| Carhart 4-Factor | 4.270 | 0.210 | 1.917 (p=0.170) | -0.798 (p=0.321) | -1.564 (p=0.262) | 0.193 (p=0.513) |
+| CAPM | 0.099 | 0.588 | 0.309 (p<0.001) | — | — | — |
+| Fama-French 3-Factor | 0.088 | 0.618 | 0.292 (p<0.001) | 0.158 (p<0.001) | -0.003 (p=0.932) | — |
+| Carhart 4-Factor | 0.147 | 0.426 | 0.283 (p<0.001) | 0.150 (p<0.001) | -0.020 (p=0.544) | -0.054 (p=0.139) |
 
 | Quantity | Paper | This run | Verdict |
 |---|---|---|---|
-| CAPM alpha (%/month, sign) | +1.18, p=0.016 (significant) | +3.77, p=0.222 (not significant) | not reproduced (significance does not hold; magnitude >50% off) |
-| CAPM market beta | 0.686 | 1.211 | not reproduced (>50% off) |
-| FF3 alpha (%/month) | +1.11, p=0.005 (significant) | +4.48, p=0.222 (not significant) | not reproduced |
-| FF3 SMB beta (sign, significance) | +0.381, p<0.001 (significant, positive) | -0.828, p=0.325 (not significant, negative) | not reproduced (sign differs) |
-| FF3 HML beta (significance) | +0.127, p=0.544 (not significant) | -1.623, p=0.270 (not significant) | partially reproduced (non-significance holds, sign and magnitude differ) |
-| Carhart alpha (%/month) | +0.98, p=0.009 (significant) | +4.27, p=0.210 (not significant) | not reproduced |
-| Carhart WML beta (significance) | p=0.409 (not significant) | p=0.513 (not significant) | reproduced (non-significance; sign/magnitude not compared, paper does not give the WML coefficient) |
+| CAPM alpha (%/month, sign) | +1.18, p=0.016 (significant) | +0.10, p=0.588 (not significant) | not reproduced (significance does not hold; magnitude >50% off) |
+| CAPM market beta | 0.686 (p not given, implied significant) | 0.309 (p<0.001, significant) | not reproduced (same sign/significance, magnitude 55% below the paper's value) |
+| FF3 alpha (%/month) | +1.11, p=0.005 (significant) | +0.09, p=0.618 (not significant) | not reproduced |
+| FF3 SMB beta (sign, significance) | +0.381, p<0.001 (significant, positive) | +0.158, p<0.001 (significant, positive) | partially reproduced (same sign and significance; magnitude 59% below the paper's value) |
+| FF3 HML beta (significance) | +0.127, p=0.544 (not significant) | -0.003, p=0.932 (not significant) | reproduced (both statistically indistinguishable from zero, as the paper reports) |
+| Carhart alpha (%/month) | +0.98, p=0.009 (significant) | +0.15, p=0.426 (not significant) | not reproduced |
+| Carhart WML beta (significance) | p=0.409 (not significant) | p=0.139 (not significant) | reproduced (non-significant in both; paper does not report the WML coefficient's sign/magnitude) |
 
 Every regression in this run reproduces the paper's qualitative sign of
-Jensen's alpha (positive) but not its statistical significance, and the SMB
-loading has the opposite sign from the paper's (-0.83 here vs. +0.38 in the
-paper). Two candidate, unverified explanations were identified but not tested
-further within the available time: (a) the 13-asset screen used here is
-fixed, point-in-time at 2025, while the paper's fundamentalist screen may
-have selected a different cross-section of names whose factor exposures
-differ; (b) the realized small-sample factor loadings on 300 monthly
-observations are imprecise (all coefficients here carry p > 0.10 except the
-Carhart market beta), so a difference of this magnitude cannot be ruled out
-as finite-sample noise. The precise cause is not identified.
+Jensen's alpha (positive), the significant positive SMB loading, and the
+non-significance of HML and WML, but none of the three alphas reach
+statistical significance here, and all point estimates (alpha and the market
+beta) are smaller in magnitude than the paper's. R-squared rises from 0.262
+(CAPM) to 0.312 (Carhart), in the same direction as the paper's reported
+increase, consistent with the SMB and market factors carrying genuine
+explanatory power over the hybrid portfolio's returns. An earlier run of this
+experiment used a results file that had not been regenerated after a fix to
+the Dataloader CSV-export column matching for tickers containing a dot
+(`src/factor_models.py` itself was already correct; `results/exp2_factor_models.csv`
+was stale): that stale file showed an implausible market beta (up to 1.92)
+exceeding the ratio of the portfolio's own monthly volatility (3.7%) to the
+market factor's (6.1%) under any realistic correlation, and a manual
+re-estimation with `statsmodels.api.OLS` on the same inputs reproduced the
+values now reported above, confirming the fix. The remaining gap (non-significant
+rather than significant alpha, and smaller-than-reported coefficient magnitudes)
+is consistent with the 13-asset screen used here selecting a different,
+point-in-time (2025) cross-section of names than the paper's own fundamentalist
+screen, which would shift both the portfolio's realized excess return and its
+factor loadings; this specific cause was not verified by re-running the
+screen on alternative dates, so it is reported as the most likely but
+unconfirmed explanation rather than an identified cause.
 
 ## Experiment 3 — Robustness Analysis: SMA Parameter Sensitivity and Sub-Period Evaluation
 
@@ -173,14 +185,23 @@ verified by an additional run.
   specification; not otherwise specified by the paper).
 - **Material differences not attributable to a known cause** (see per-experiment
   sections above): the magnitude (though not the ranking) of the drawdown
-  figures in Experiment 1, the CAPM/FF3/Carhart alpha significance and the SMB
-  sign in Experiment 2, and the sub-period alpha pattern in Experiment 3. In
-  every case the relevant component (bars, NEFIN factors, OLS estimation,
-  drawdown calculation) was exercised by the unit tests in `tests/` on
-  synthetic fixtures with known expected signs and passed; the differences
-  were not reduced to a single identified formula, sign, window, or data
-  defect within the time available, and are reported here rather than
-  attributed to a specific cause.
+  figures in Experiment 1, the CAPM/FF3/Carhart alpha significance in
+  Experiment 2, and the sub-period alpha pattern in Experiment 3. In every
+  case the relevant component (bars, NEFIN factors, OLS estimation, drawdown
+  calculation) was exercised by the unit tests in `tests/` on synthetic
+  fixtures with known expected signs and passed; the differences were not
+  reduced to a single identified formula, sign, window, or data defect within
+  the time available, and are reported here rather than attributed to a
+  specific cause.
+- **Stale results file (corrected).** `results/exp2_factor_models.csv` had
+  been committed from a run predating a fix to the Dataloader CSV-export
+  column matching for tickers containing a dot, and was not regenerated after
+  that fix even though `src/factor_models.py` itself was already correct. The
+  stale file reported an implausible market beta of up to 1.92, which a
+  direct check (`cov(Rp, Rm-Rf) / var(Rm-Rf)` on the same monthly series)
+  showed was inconsistent with the portfolio's own realized volatility; the
+  experiment was re-run and the file above now reflects the current code and
+  data.
 
 ## Not reproduced
 
