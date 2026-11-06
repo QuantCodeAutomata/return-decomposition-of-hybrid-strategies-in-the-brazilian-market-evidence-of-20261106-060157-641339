@@ -1,9 +1,9 @@
 """Jobson-Korkie (1981) test with the Memmel (2003) correction (Section 3.3).
 
 # Custom implementation (paper Section 3.3: Jobson-Korkie test, Memmel
-# correction). Context7 "scipy.stats"/"statsmodels" documentation covers
-# generic z-tests but neither ships the Jobson-Korkie Sharpe-ratio-difference
-# test, so its asymptotic variance formula is implemented directly from
+# correction). Neither scipy.stats nor statsmodels ships the Jobson-Korkie
+# Sharpe-ratio-difference test (both cover only generic z-tests), so its
+# asymptotic variance formula is implemented directly from
 # Jobson & Korkie (1981) Eq. 10 and the Memmel (2003) small-sample
 # correction, Eq. 2.
 """

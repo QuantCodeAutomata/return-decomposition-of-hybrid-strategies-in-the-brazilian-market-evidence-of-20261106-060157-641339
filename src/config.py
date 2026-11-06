@@ -54,7 +54,7 @@ TRADING_DAYS_PER_YEAR = 252  # calendar convention for annualizing daily series 
 MONTHS_PER_YEAR = 12  # used to annualize monthly Sharpe ratios (Section 3.3, "annualized Sharpe ratio of the aggregate portfolio is 0.443")
 
 # ---------------------------------------------------------------------------
-# Profit Factor definition (Section 3.3, uncertainty flagged in the task)
+# Profit Factor definition (Section 3.3; the paper does not fully specify it)
 # ---------------------------------------------------------------------------
 # The paper defines Profit Factor as "the ratio of total gross profit to total
 # gross loss across all operations" (Section 3.3, Table 04 note). "Operations"

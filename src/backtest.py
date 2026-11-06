@@ -1,8 +1,8 @@
 """Per-asset backtest simulation (Sections 3.1-3.2): MAC system vs buy-and-hold.
 
 # vectorbt Portfolio.from_signals / from_holding: used to simulate the trading
-# account instead of a hand-rolled equity-curve loop (Context7 "vectorbt.dev"
-# documentation on signal-based portfolios).
+# account instead of a hand-rolled equity-curve loop (vectorbt documentation
+# on signal-based portfolios).
 """
 
 import numpy as np

@@ -1,10 +1,9 @@
 """CAPM, Fama-French three-factor and Carhart four-factor regressions
 (Section 3.4).
 
-# statsmodels OLS with White (1980) HC standard errors: Context7
-# "statsmodels" documentation confirms ``sm.OLS(...).fit(cov_type="HC0")``
-# implements heteroskedasticity-robust (White) standard errors directly, so
-# no custom sandwich-estimator code is written.
+# statsmodels OLS with White (1980) HC standard errors: ``sm.OLS(...).fit(
+# cov_type="HC0")`` implements heteroskedasticity-robust (White) standard
+# errors directly, so no custom sandwich-estimator code is written.
 """
 
 from dataclasses import dataclass

@@ -1,8 +1,8 @@
 """Moving-average crossover (MAC) technical signals (Section 3.2).
 
 # vectorbt MA: used for the rolling SMA and the crossing-point detection
-# instead of a hand-rolled rolling-window loop (Context7 "vectorbt.dev"
-# documentation: ``vbt.MA.run`` + ``ma_crossed_above``/``ma_crossed_below``).
+# instead of a hand-rolled rolling-window loop (``vbt.MA.run`` +
+# ``ma_crossed_above``/``ma_crossed_below``).
 """
 
 import pandas as pd

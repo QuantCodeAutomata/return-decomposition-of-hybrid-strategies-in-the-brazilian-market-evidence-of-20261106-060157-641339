@@ -181,8 +181,7 @@ verified by an additional run.
   as the ratio of summed positive to summed (absolute) negative round-trip
   trade P&L for the MAC system, and as the ratio of summed positive to summed
   negative daily returns for the buy-and-hold and Ibovespa series, which have
-  no discrete trades (Section 3.3, uncertainty flagged in the experiment
-  specification; not otherwise specified by the paper).
+  no discrete trades (Section 3.3; the paper does not specify this case).
 - **Material differences not attributable to a known cause** (see per-experiment
   sections above): the magnitude (though not the ranking) of the drawdown
   figures in Experiment 1, the CAPM/FF3/Carhart alpha significance in
@@ -205,8 +204,8 @@ verified by an additional run.
 
 ## Not reproduced
 
-Nothing in the three selected experiments was left unimplemented: every
-table and figure described in the experiment methodologies above was
-produced from the real B3/Ibovespa/NEFIN data path. Where a reported number
-differs materially from the paper, it is listed as "not reproduced" or
-"partially reproduced" in the tables above rather than omitted.
+Every table and figure described in the methodology sections above (3.1-3.5,
+4.1-4.4) was produced from the real B3/Ibovespa/NEFIN data path; nothing was
+left unimplemented. Where a reported number differs materially from the
+paper, it is listed as "not reproduced" or "partially reproduced" in the
+tables above rather than omitted.

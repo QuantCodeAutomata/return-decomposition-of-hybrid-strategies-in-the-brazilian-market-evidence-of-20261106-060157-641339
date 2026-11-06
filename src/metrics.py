@@ -2,8 +2,8 @@
 
 # Custom implementation (paper Section 3.3: Sharpe ratio, Sortino ratio,
 # Maximum Drawdown, Profit Factor, Total Net Profit). quantstats.stats was
-# checked first (Context7 "ranaroussi/quantstats" docs): its ``sharpe`` and
-# ``sortino`` only accept a single constant annual risk-free rate, but the
+# checked first: its ``sharpe`` and ``sortino`` only accept a single constant
+# annual risk-free rate, but the
 # paper's risk-free rate is the *monthly average SELIC rate*, a genuine time
 # series that must be subtracted period-by-period before annualizing, so the
 # formulas are implemented directly from their standard definitions
