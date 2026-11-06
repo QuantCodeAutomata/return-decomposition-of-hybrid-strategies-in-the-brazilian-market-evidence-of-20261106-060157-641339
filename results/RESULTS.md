@@ -146,11 +146,21 @@ Source file: `results/exp3_sma_sensitivity.csv`, `results/exp3_subperiod_alpha.c
 |---|---|---|---|
 | Alpha concentrated in 2000-2008, declining toward 2017-2025 | holds | opposite: alpha is negative and not significant in 2000-2008 and 2009-2016, positive and significant (p=0.002) only in 2017-2025 | not reproduced |
 
-The reversed sub-period pattern was not localized further within the
-available time; it shares the same hybrid-portfolio return series as
-Experiment 2, so a cause found there (screen composition or small-sample
-noise) would likely also explain this reversal, but this link was not
-verified by an additional run.
+The reversed sub-period pattern shares the same hybrid-portfolio return
+series as Experiment 2, so a cause found there (screen composition or
+small-sample noise) would likely also explain this reversal. One structural
+cause was localized directly from the price data: the 13-name screen is not
+a constant-composition average across sub-periods, because several of its
+names were not yet listed in the earlier years. Only 9 of the 13 tickers
+have price history in 2000-2008 (CEBR3, CMIG4, CSMG3, CYRE3, EALT3, GRND3,
+ITSA3, JHSF3, SYNE3), rising to 12 of 13 in 2009-2016 (adding PRIO3 and
+MRSA3B) and the full 13 only from 2017-2025 (adding MDNE3 and TECN3). The
+2000-2008 alpha is therefore estimated on a 9-name average, not the 13-name
+portfolio the paper's screen names as a whole, which both lowers its
+effective diversification and changes its composition relative to the later
+sub-periods. This was not confirmed by an isolated re-run to flip the sign
+by itself, so it is reported as a localized, identified structural
+difference rather than a confirmed single cause of the reversal.
 
 ## Deviations from the paper
 
