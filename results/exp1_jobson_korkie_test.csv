@@ -1,0 +1,10 @@
+,0
+sharpe_hybrid_monthly,0.05046460779412307
+sharpe_ibovespa_monthly,0.012790883306461661
+sharpe_hybrid_annualized,0.17481452936691502
+sharpe_ibovespa_annualized,0.04430891952095238
+z_statistic,0.6452953500538349
+p_value,0.5187358054838049
+n_obs,300
+significance_level,0.05
+reject_null_equal_sharpe,False

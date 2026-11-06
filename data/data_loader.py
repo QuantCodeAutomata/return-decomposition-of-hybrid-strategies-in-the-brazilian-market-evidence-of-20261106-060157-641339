@@ -16,6 +16,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import requests
 from dotenv import load_dotenv
@@ -216,6 +217,40 @@ def load_ohlcv(
     return bars, meta
 
 
+def _despike_price_series(price: pd.Series, spike_factor: float = 3.0,
+                           window: int = 15, passes: int = 3) -> tuple[pd.Series, int]:
+    """Repair transient single-day price-vendor artifacts (Hampel-style filter).
+
+    Custom implementation: no paper equation covers this, it is a data-hygiene
+    step applied before the Section 3.2 MAC signals are computed. The Yahoo
+    backstop series for several Brazilian tickers contain isolated days (or
+    short runs of a few days) where the printed price is off by roughly a
+    factor of 8-10x from the surrounding level and reverts immediately after,
+    which is not a plausible genuine one-day return for a listed equity and is
+    consistent with a split/unit misalignment in the vendor feed rather than a
+    real price move. A trailing rolling median of log-price (excluding the
+    point itself) is used as a robust local reference; a point more than
+    ``spike_factor``x away from it in either direction is treated as a bad
+    print and replaced by log-linear interpolation between the nearest good
+    neighbours. Applied over several passes so an adjacent run of bad prints
+    (not just single isolated days) is fully bridged.
+    """
+    clean = price.astype(float).copy()
+    n_fixed = 0
+    threshold = np.log(spike_factor)
+    for _ in range(passes):
+        log_price = np.log(clean)
+        rolling_median = log_price.shift(1).rolling(window, min_periods=3).median()
+        is_spike = ((log_price - rolling_median).abs() > threshold).fillna(False)
+        if not is_spike.any():
+            break
+        n_fixed += int(is_spike.sum())
+        clean = clean.mask(is_spike)
+        log_clean = np.log(clean).interpolate(method="linear", limit_direction="both")
+        clean = np.exp(log_clean)
+    return clean, n_fixed
+
+
 def load_close_price_panel(
     tickers: list[str],
     start_date: str,
@@ -224,12 +259,15 @@ def load_close_price_panel(
     ticker_suffix: str = ".SA",
     identity_date: str | None = None,
     use_cache: bool = True,
+    despike: bool = True,
 ) -> tuple[pd.DataFrame, dict]:
     """Wide dividend-adjusted close-price panel, one column per ticker.
 
     ``tickers`` are given without the exchange suffix (e.g. ``ITSA3``);
     ``ticker_suffix`` is appended for the Dataloader request and stripped back
-    off the returned column names.
+    off the returned column names. When ``despike`` is true, isolated
+    vendor-data price spikes are repaired (see :func:`_despike_price_series`)
+    and the per-ticker count of corrected points is recorded in ``meta``.
     """
     full_tickers = [t + ticker_suffix for t in tickers]
     bars, meta = load_ohlcv(
@@ -240,7 +278,49 @@ def load_close_price_panel(
     panel.columns = [c[: -len(ticker_suffix)] if c.endswith(ticker_suffix) else c
                      for c in panel.columns]
     panel = panel.sort_index()
+    if despike:
+        despike_counts = {}
+        for column in panel.columns:
+            repaired, n_fixed = _despike_price_series(panel[column])
+            panel[column] = repaired
+            if n_fixed:
+                despike_counts[column] = n_fixed
+        meta["despiked_points"] = despike_counts
     return panel, meta
+
+
+def load_ibovespa_index(start_date: str, end_date: str, use_cache: bool = True) -> tuple[pd.Series, dict]:
+    """Ibovespa index level (``^BVSP``) used as the market benchmark (Section 3.3).
+
+    The Ibovespa index is not an OHLCV-bar security the QuantX Dataloader can
+    serve (``POST /fetch-ohlcvs`` follows individual stock securities, not
+    index levels), and direct Massive index symbols (``I:IBOV``, ``IBOV``,
+    ``I:BVSP``) return ``NOT_AUTHORIZED``: the project has no Massive index
+    entitlement. The index level is therefore loaded directly from Yahoo
+    Finance, the documented fallback for data the Dataloader/Massive path
+    does not serve. An index level carries no dividend adjustment (it is a
+    price index, not a security).
+    """
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cache_path = CACHE_DIR / f"ibovespa_{start_date}_{end_date}.csv"
+    if use_cache and cache_path.exists():
+        series = pd.read_csv(cache_path, index_col=0, parse_dates=True)["close"]
+    else:
+        import yfinance as yf
+
+        raw = yf.download("^BVSP", start=start_date, end=end_date, progress=False)
+        if raw.empty:
+            raise DataloaderError("Yahoo Finance returned no Ibovespa (^BVSP) data")
+        close = raw["Close"]
+        if isinstance(close, pd.DataFrame):
+            close = close.iloc[:, 0]
+        series = close.rename("close")
+        series.index.name = "date"
+        if use_cache:
+            series.to_csv(cache_path)
+    meta = {"source": "yahoo_direct", "ticker": "^BVSP", "rows": int(series.shape[0]),
+            "non_massive_source": {"^BVSP": "yahoo_direct"}, "failed": {}}
+    return series, meta
 
 
 def load_nefin_factors(url: str, use_cache: bool = True) -> pd.DataFrame:
@@ -289,10 +369,8 @@ def load_experiment_universe(
         tickers, start_date, end_date,
         ticker_suffix=ticker_suffix, identity_date=identity_date, use_cache=use_cache,
     )
-    ibov_prices, ibov_meta = load_close_price_panel(
-        [ibov_ticker], ibov_start_date, end_date,
-        ticker_suffix=ticker_suffix, identity_date=identity_date, use_cache=use_cache,
-    )
+    ibov_series, ibov_meta = load_ibovespa_index(ibov_start_date, end_date, use_cache=use_cache)
+    ibov_prices = ibov_series.to_frame(name=ibov_ticker)
     nefin = load_nefin_factors(nefin_url, use_cache=use_cache)
     nefin = nefin[(nefin.index >= start_date) & (nefin.index <= end_date)]
     return {

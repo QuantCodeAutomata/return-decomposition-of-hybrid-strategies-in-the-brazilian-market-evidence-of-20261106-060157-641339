@@ -1,0 +1,28 @@
+{
+  "price_rows": 6527,
+  "price_tickers": 13,
+  "date_range": [
+    "2000-01-02",
+    "2025-12-29"
+  ],
+  "failed_tickers": {},
+  "non_massive_source": {
+    "CEBR3.SA": "yahoo",
+    "CMIG4.SA": "yahoo",
+    "CSMG3.SA": "yahoo",
+    "CYRE3.SA": "yahoo",
+    "EALT3.SA": "yahoo",
+    "GRND3.SA": "yahoo",
+    "ITSA3.SA": "yahoo",
+    "JHSF3.SA": "yahoo",
+    "MDNE3.SA": "yahoo",
+    "PRIO3.SA": "yahoo",
+    "MRSA3B.SA": "yahoo",
+    "SYNE3.SA": "yahoo",
+    "TECN3.SA": "yahoo"
+  },
+  "ibovespa_non_massive_source": {
+    "^BVSP": "yahoo_direct"
+  },
+  "nefin_rows": 300
+}

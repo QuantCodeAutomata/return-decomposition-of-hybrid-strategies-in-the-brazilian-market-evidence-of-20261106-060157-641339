@@ -5,6 +5,8 @@ import pandas as pd
 import pytest
 
 from src.metrics import (
+    average_per_asset_max_drawdown,
+    average_per_asset_net_profit,
     max_drawdown,
     period_profit_factor,
     sharpe_ratio,
@@ -26,6 +28,35 @@ def test_max_drawdown_known_series():
 def test_max_drawdown_monotone_up_is_zero():
     returns = pd.Series([0.01] * 20)
     assert max_drawdown(returns) == pytest.approx(0.0, abs=1e-9)
+
+
+def test_average_per_asset_max_drawdown_is_cross_sectional_mean():
+    # Asset A: 100 -> 120 -> 90 (25% drawdown). Asset B: flat (0% drawdown).
+    asset_returns = pd.DataFrame(
+        {"A": [0.20, -0.25], "B": [0.0, 0.0]}
+    )
+    avg_dd = average_per_asset_max_drawdown(asset_returns)
+    assert avg_dd == pytest.approx((0.25 + 0.0) / 2, abs=1e-3)
+
+
+def test_average_per_asset_max_drawdown_exceeds_blended_series_drawdown():
+    # Two anti-correlated assets: each has a large idiosyncratic drawdown,
+    # but a simple-average blended series of the two is perfectly flat, so a
+    # blended-series drawdown would understate the true per-asset average.
+    asset_returns = pd.DataFrame(
+        {"A": [0.20, -0.25, 0.30], "B": [-0.20, 0.30, -0.25]}
+    )
+    avg_dd = average_per_asset_max_drawdown(asset_returns)
+    blended_dd = max_drawdown(asset_returns.mean(axis=1))
+    assert avg_dd > blended_dd
+
+
+def test_average_per_asset_net_profit_matches_manual_mean():
+    asset_returns = pd.DataFrame({"A": [0.10, 0.10], "B": [-0.10, -0.10]})
+    avg_profit = average_per_asset_net_profit(asset_returns, init_cash=1_000.0)
+    expected_a = total_net_profit(asset_returns["A"], 1_000.0)
+    expected_b = total_net_profit(asset_returns["B"], 1_000.0)
+    assert avg_profit == pytest.approx((expected_a + expected_b) / 2)
 
 
 def test_sharpe_ratio_scalar_rf_matches_manual_formula():

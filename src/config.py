@@ -20,10 +20,11 @@ DATALOADER_TICKER_SUFFIX = ".SA"  # Yahoo/Dataloader exchange suffix for B3-list
 # Ibovespa benchmark (Section 3.3): the paper uses the Ibovespa index itself.
 # Massive has no entitlement for the Brazilian index under any tested ticker
 # convention (I:IBOV, IBOV, I:BVSP, I:BVSP.SA all return NOT_AUTHORIZED /
-# "no data available"), so the ETF that tracks the index is used instead, as
-# instructed for an unentitled index. BOVA11 only trades from 2008-11-28.
-IBOVESPA_TICKER = "BOVA11"  # B3 ETF tracking the Ibovespa index (substitute, see RESULTS.md)
-IBOVESPA_AVAILABLE_FROM = "2008-11-28"  # first trading date of BOVA11 on B3
+# "no data available"), and the index is not an OHLCV security the Dataloader
+# can serve, so the index level is loaded directly from Yahoo Finance, which
+# covers the full 2000-2025 sample with no truncation.
+IBOVESPA_TICKER = "^BVSP"  # Ibovespa index level, loaded directly from Yahoo Finance (Section 3.3)
+IBOVESPA_AVAILABLE_FROM = "2000-01-01"  # equals START_DATE below; full index history available
 
 # ---------------------------------------------------------------------------
 # Sample period (Section 3, paper's time horizon)

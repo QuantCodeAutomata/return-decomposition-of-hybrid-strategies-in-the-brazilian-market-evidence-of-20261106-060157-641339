@@ -22,6 +22,8 @@ from src.backtest import (
     pooled_trade_pnls,
 )
 from src.metrics import (
+    average_per_asset_max_drawdown,
+    average_per_asset_net_profit,
     max_drawdown,
     period_profit_factor,
     sharpe_ratio,
@@ -47,13 +49,26 @@ def _descriptive_row(
     monthly_returns: pd.Series,
     rf_monthly: pd.Series,
     profit_factor: float,
+    net_profit_brl: float,
+    max_drawdown_pct: float,
 ) -> dict:
-    """One row of Table 04-style descriptive metrics (Section 3.3)."""
+    """One row of Table 04-style descriptive metrics (Section 3.3).
+
+    Total Net Profit and Maximum Drawdown are passed in explicitly: for the
+    Hybrid Portfolio and Buy-and-Hold rows they are the cross-sectional
+    average across the 13 individually simulated R$1,000,000 accounts
+    (Section 3.1 step 2; Section 3.3 reports an "average net profit" and
+    "average drawdown" across assets, the same cross-sectional averaging
+    Section 3.5/Table 06 applies to the robustness tests). Sharpe and Sortino
+    instead use the single blended daily-return series Rp (Section 3.1 step
+    4: simple average across assets' own returns; Section 3.3 explicitly
+    calls this the "annualized Sharpe ratio of the aggregate portfolio").
+    """
     paired_rf = rf_monthly.reindex(monthly_returns.index).ffill()
     return {
         "label": label,
-        "total_net_profit_brl": total_net_profit(daily_returns, cfg.INITIAL_CAPITAL),
-        "max_drawdown_pct": max_drawdown(daily_returns) * 100,
+        "total_net_profit_brl": net_profit_brl,
+        "max_drawdown_pct": max_drawdown_pct,
         "sharpe_ratio": sharpe_ratio(monthly_returns, paired_rf, cfg.MONTHS_PER_YEAR),
         "sortino_ratio": sortino_ratio(monthly_returns, paired_rf, cfg.MONTHS_PER_YEAR),
         "profit_factor": profit_factor,
@@ -107,10 +122,18 @@ def run(use_cache: bool = True) -> dict:
     bh_profit_factor = period_profit_factor(hybrid_bh_daily)
     ibov_profit_factor = period_profit_factor(ibov_daily)
 
+    mac_net_profit = average_per_asset_net_profit(mac_asset_returns, cfg.INITIAL_CAPITAL)
+    bh_net_profit = average_per_asset_net_profit(bh_asset_returns, cfg.INITIAL_CAPITAL)
+    ibov_net_profit = total_net_profit(ibov_daily, cfg.INITIAL_CAPITAL)
+
+    mac_avg_drawdown = average_per_asset_max_drawdown(mac_asset_returns) * 100
+    bh_avg_drawdown = average_per_asset_max_drawdown(bh_asset_returns) * 100
+    ibov_drawdown = max_drawdown(ibov_daily) * 100
+
     rows = [
-        _descriptive_row("Hybrid Portfolio (SMA 9-46)", hybrid_mac_daily, hybrid_mac_monthly, rf_monthly, mac_profit_factor),
-        _descriptive_row("Buy-and-Hold (13 assets)", hybrid_bh_daily, hybrid_bh_monthly, rf_monthly, bh_profit_factor),
-        _descriptive_row(f"Ibovespa ({cfg.IBOVESPA_TICKER})", ibov_daily, ibov_monthly, rf_monthly, ibov_profit_factor),
+        _descriptive_row("Hybrid Portfolio (SMA 9-46)", hybrid_mac_daily, hybrid_mac_monthly, rf_monthly, mac_profit_factor, mac_net_profit, mac_avg_drawdown),
+        _descriptive_row("Buy-and-Hold (13 assets)", hybrid_bh_daily, hybrid_bh_monthly, rf_monthly, bh_profit_factor, bh_net_profit, bh_avg_drawdown),
+        _descriptive_row(f"Ibovespa ({cfg.IBOVESPA_TICKER})", ibov_daily, ibov_monthly, rf_monthly, ibov_profit_factor, ibov_net_profit, ibov_drawdown),
     ]
     table = pd.DataFrame(rows).set_index("label")
     table.to_csv(f"{RESULTS_DIR}/exp1_descriptive_metrics.csv")
